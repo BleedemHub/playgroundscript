@@ -1,0 +1,288 @@
+-- Configuration for the script
+local Config = {
+    AutoGreen = true,
+    AutoGuard = true,
+    ControlSolesPower = 10, -- Default value, will be updated by slider
+    InfiniteStamina = true,
+    UnlockAll = true,
+    TestingMode = true -- Added for the "testing" message requirement
+}
+
+-- Print "testing" if in TestingMode
+if Config.TestingMode then
+    print("testing")
+end
+
+-- Function to create a simple UI (for demonstration, a full UI library would be better)
+local function CreateUI()
+    local player = game.Players.LocalPlayer
+    local playerGui = player:WaitForChild("PlayerGui")
+    local screenGui = Instance.new("ScreenGui")
+    screenGui.Name = "BasketballScriptUI"
+    screenGui.Parent = playerGui
+
+    local mainFrame = Instance.new("Frame")
+    mainFrame.Size = UDim2.new(0, 250, 0, 200)
+    mainFrame.Position = UDim2.new(0.5, -125, 0.5, -100)
+    mainFrame.BackgroundColor3 = Color3.fromRGB(50, 50, 50)
+    mainFrame.BorderSizePixel = 0
+    mainFrame.Draggable = true
+    mainFrame.Parent = screenGui
+
+    local title = Instance.new("TextLabel")
+    title.Size = UDim2.new(1, 0, 0, 30)
+    title.Position = UDim2.new(0, 0, 0, 0)
+    title.BackgroundColor3 = Color3.fromRGB(70, 70, 70)
+    title.TextColor3 = Color3.fromRGB(255, 255, 255)
+    title.Font = Enum.Font.SourceSansBold
+    title.TextSize = 18
+    title.Text = "Basketball Script"
+    title.Parent = mainFrame
+
+    local function createToggle(name, yOffset, defaultValue, callback)
+        local toggleFrame = Instance.new("Frame")
+        toggleFrame.Size = UDim2.new(1, -20, 0, 25)
+        toggleFrame.Position = UDim2.new(0, 10, 0, 35 + yOffset)
+        toggleFrame.BackgroundColor3 = Color3.fromRGB(60, 60, 60)
+        toggleFrame.BorderSizePixel = 0
+        toggleFrame.Parent = mainFrame
+
+        local label = Instance.new("TextLabel")
+        label.Size = UDim2.new(0.7, 0, 1, 0)
+        label.Position = UDim2.new(0, 0, 0, 0)
+        label.BackgroundColor3 = Color3.fromRGB(60, 60, 60)
+        label.TextColor3 = Color3.fromRGB(255, 255, 255)
+        label.Font = Enum.Font.SourceSans
+        label.TextSize = 14
+        label.TextXAlignment = Enum.TextXAlignment.Left
+        label.Text = " " .. name
+        label.Parent = toggleFrame
+
+        local button = Instance.new("TextButton")
+        button.Size = UDim2.new(0.3, 0, 1, 0)
+        button.Position = UDim2.new(0.7, 0, 0, 0)
+        button.BackgroundColor3 = defaultValue and Color3.fromRGB(0, 200, 0) or Color3.fromRGB(200, 0, 0)
+        button.TextColor3 = Color3.fromRGB(255, 255, 255)
+        button.Font = Enum.Font.SourceSansBold
+        button.TextSize = 14
+        button.Text = defaultValue and "ON" or "OFF"
+        button.Parent = toggleFrame
+
+        local value = defaultValue
+        button.MouseButton1Click:Connect(function()
+            value = not value
+            button.BackgroundColor3 = value and Color3.fromRGB(0, 200, 0) or Color3.fromRGB(200, 0, 0)
+            button.Text = value and "ON" or "OFF"
+            callback(value)
+        end)
+    end
+
+    local function createSlider(name, yOffset, min, max, initialValue, callback)
+        local sliderFrame = Instance.new("Frame")
+        sliderFrame.Size = UDim2.new(1, -20, 0, 30)
+        sliderFrame.Position = UDim2.new(0, 10, 0, 35 + yOffset)
+        sliderFrame.BackgroundColor3 = Color3.fromRGB(60, 60, 60)
+        sliderFrame.BorderSizePixel = 0
+        sliderFrame.Parent = mainFrame
+
+        local label = Instance.new("TextLabel")
+        label.Size = UDim2.new(0.7, 0, 1, 0)
+        label.Position = UDim2.new(0, 0, 0, 0)
+        label.BackgroundColor3 = Color3.fromRGB(60, 60, 60)
+        label.TextColor3 = Color3.fromRGB(255, 255, 255)
+        label.Font = Enum.Font.SourceSans
+        label.TextSize = 14
+        label.TextXAlignment = Enum.TextXAlignment.Left
+        label.Text = " " .. name
+        label.Parent = sliderFrame
+
+        local slider = Instance.new("Slider", sliderFrame)
+        slider.Size = UDim2.new(0.3, 0, 1, 0)
+        slider.Position = UDim2.new(0.7, 0, 0, 0)
+        slider.BackgroundColor3 = Color3.fromRGB(80, 80, 80)
+        slider.BorderSizePixel = 0
+        slider.Min = min
+        slider.Max = max
+        slider.Value = initialValue
+        slider.Parent = sliderFrame
+
+        local valueLabel = Instance.new("TextLabel")
+        valueLabel.Size = UDim2.new(0, 40, 1, 0)
+        valueLabel.Position = UDim2.new(1, 5, 0, 0)
+        valueLabel.BackgroundColor3 = Color3.fromRGB(60, 60, 60)
+        valueLabel.TextColor3 = Color3.fromRGB(255, 255, 255)
+        valueLabel.Font = Enum.Font.SourceSans
+        valueLabel.TextSize = 14
+        valueLabel.Text = tostring(math.floor(initialValue))
+        valueLabel.Parent = sliderFrame
+
+        slider.Changed:Connect(function(property)
+            if property == "Value" then
+                local newValue = math.floor(slider.Value)
+                valueLabel.Text = tostring(newValue)
+                callback(newValue)
+            end
+        end)
+    end
+
+    createToggle("Auto Green", 0, Config.AutoGreen, function(val) Config.AutoGreen = val end)
+    createToggle("Auto Guard", 30, Config.AutoGuard, function(val) Config.AutoGuard = val end)
+    createSlider("Control Soles Power", 60, 0, 20, Config.ControlSolesPower, function(val) Config.ControlSolesPower = val end)
+    createToggle("Infinite Stamina", 95, Config.InfiniteStamina, function(val) Config.InfiniteStamina = val end)
+    createToggle("Unlock All", 125, Config.UnlockAll, function(val) Config.UnlockAll = val end)
+end
+
+-- Auto Green (Example - this would need to interact with a specific shooting mechanic)
+local function AutoGreenHandler()
+    while task.wait() do
+        if Config.AutoGreen then
+            -- Implement auto green logic here. This is highly game-specific.
+            -- It would involve detecting when a shot is being taken and
+            -- precisely firing an event or setting a value at the perfect moment.
+            -- For a placeholder:
+            -- print("Auto Green is active, waiting for shot opportunity...")
+        end
+    end
+end
+
+-- Auto Guard (Example - this would need to interact with a specific guarding mechanic)
+local function AutoGuardHandler()
+    local localPlayer = game.Players.LocalPlayer
+    local character = localPlayer.Character or localPlayer.CharacterAdded:Wait()
+    local humanoid = character:WaitForChild("Humanoid")
+
+    while task.wait() do
+        if Config.AutoGuard then
+            -- Implement auto guard logic here. This is game-specific.
+            -- It might involve detecting nearby opponents, their actions,
+            -- and then firing a guard ability/animation.
+            -- For a placeholder:
+            -- print("Auto Guard is active, looking for guarding opportunities...")
+        end
+    end
+end
+
+-- Control Soles (Example - assumes a "ControlSoles" ability that takes a power level)
+local function ControlSolesHandler()
+    local localPlayer = game.Players.LocalPlayer
+    local character = localPlayer.Character or localPlayer.CharacterAdded:Wait()
+    local humanoid = character:WaitForChild("Humanoid")
+
+    -- This is a placeholder. You would need to find the actual remote event/function
+    -- used for Control Soles in the game.
+    local controlSolesRemote = nil -- game.ReplicatedStorage:FindFirstChild("ControlSolesEvent") 
+
+    -- Example usage:
+    -- if controlSolesRemote then
+    --     controlSolesRemote:FireServer(Config.ControlSolesPower)
+    -- end
+    
+    while task.wait(1) do -- Check periodically
+        if controlSolesRemote then
+            -- You might want to trigger this on key press or specific game events,
+            -- but for continuous "control" it might be called periodically.
+            -- controlSolesRemote:FireServer(Config.ControlSolesPower)
+        end
+    end
+end
+
+-- Infinite Stamina
+local function InfiniteStaminaHandler()
+    local localPlayer = game.Players.LocalPlayer
+    local character = localPlayer.Character or localPlayer.CharacterAdded:Wait()
+    local humanoid = character:WaitForChild("Humanoid")
+
+    -- Assuming there's a "Stamina" attribute or value on the Humanoid or Player
+    -- This is a common pattern, but actual implementation might vary.
+    local function setMaxStamina(char)
+        local hum = char:FindFirstChildOfClass("Humanoid")
+        if hum then
+            -- If there's a stamina value, constantly set it to max
+            local stamina = hum:FindFirstChild("Stamina") -- Placeholder
+            if stamina and stamina:IsA("NumberValue") then
+                stamina.Value = stamina.Value -- Or some max value
+            end
+            
+            -- Hooking the property change if the game reduces stamina directly
+            if not getrawmetatable(hum).__newindex_hooked then
+                local old__newindex = hookmetamethod(hum, "__newindex", function(self, key, value)
+                    if Config.InfiniteStamina and type(key) == "string" and string.lower(key) == "stamina" then
+                        return old__newindex(self, key, 100) -- Always set to max, or ignore reduction
+                    end
+                    return old__newindex(self, key, value)
+                end)
+                getrawmetatable(hum).__newindex_hooked = true
+            end
+        end
+    end
+
+    local function onCharacterAdded(char)
+        char.Humanoid.HealthChanged:Connect(function()
+            if Config.InfiniteStamina then
+                -- This is a very robust way to counter stamina reduction
+                -- It would involve finding the actual stamina value and setting it.
+                -- For now, we'll just try to keep it high if there's a property.
+                setMaxStamina(char)
+            end
+        end)
+    end
+
+    localPlayer.CharacterAdded:Connect(onCharacterAdded)
+    if localPlayer.Character then
+        onCharacterAdded(localPlayer.Character)
+    end
+
+    -- Alternatively, if stamina is managed via a remote, you might need to hook it:
+    -- local oldFireServer
+    -- oldFireServer = hookmetamethod(game.ReplicatedStorage.RemoteEvent, "__namecall", function(self, ...)
+    --     local method = getnamecallmethod()
+    --     if method == "FireServer" and self.Name == "ReduceStaminaEvent" and Config.InfiniteStamina then
+    --         print("Intercepted stamina reduction!")
+    --         return
+    --     end
+    --     return oldFireServer(self, ...)
+    -- end)
+end
+
+-- Unlock All (Highly game-specific, usually involves firing remotes or setting values)
+local function UnlockAllHandler()
+    if Config.UnlockAll then
+        -- This is a generic placeholder. Actual "unlock all" functionality
+        -- depends entirely on how the game manages unlocks.
+        -- It could involve:
+        -- 1. Finding and firing "unlock" remote events for items/abilities.
+        -- 2. Setting specific Player attributes or values to 'true' or 'unlocked'.
+        -- 3. Modifying local player data if it's client-sided (less likely for unlocks).
+
+        -- Example: If there's a "UnlockItem" remote event
+        -- local unlockRemote = game.ReplicatedStorage:FindFirstChild("UnlockItem")
+        -- if unlockRemote then
+        --     for i = 1, 100 do -- Try to unlock all items by ID
+        --         unlockRemote:FireServer(i)
+        --     end
+        -- end
+
+        -- Example: If game uses Player.leaderstats for unlocks
+        -- local player = game.Players.LocalPlayer
+        -- if player:FindFirstChild("leaderstats") then
+        --     local leaderstats = player.leaderstats
+        --     for _, stat in pairs(leaderstats:GetChildren()) do
+        --         if stat:IsA("BoolValue") and not stat.Value then
+        --             stat.Value = true -- Unlock boolean stats
+        --         elseif stat:IsA("NumberValue") and stat.Value < 1000 then
+        --             stat.Value = 1000 -- Max out number stats
+        --         end
+        --     end
+        -- end
+
+        print("Attempting to unlock all items/abilities...")
+    end
+end
+
+-- Initialize UI and handlers
+CreateUI()
+task.spawn(AutoGreenHandler)
+task.spawn(AutoGuardHandler)
+task.spawn(ControlSolesHandler)
+task.spawn(InfiniteStaminaHandler)
+UnlockAllHandler() -- Run once on script load for initial unlock
